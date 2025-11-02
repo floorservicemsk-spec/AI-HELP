@@ -45,13 +45,13 @@ class RAGService:
         
         points = []
         for idx, chunk in enumerate(chunks):
-            # ?Генерируем эмбеддинг для текста
+            # Генерируем эмбеддинг для текста
             text = chunk.get("text", "")
             if not text:
                 continue
             embedding = self.embedding_model.encode(text).tolist()
             
-            # ?Используем хеш для point_id для уникальности (Qdrant требует числовой ID)
+            # Используем хеш для point_id для уникальности (Qdrant требует числовой ID)
             point_id_str = f"{batch_id}_{idx}_{text[:50]}" if batch_id else f"{idx}_{text[:50]}"
             point_id = int(hashlib.md5(point_id_str.encode()).hexdigest()[:8], 16)
             
@@ -79,7 +79,7 @@ class RAGService:
     
     def search(self, query: str, top_k: int = 5) -> List[Dict]:
         """Поиск релевантных чанков по запросу"""
-        # ?Генерируем эмбеддинг для текста?
+        # Генерируем эмбеддинг для запроса
         query_embedding = self.embedding_model.encode(query).tolist()
         
         # Поиск в Qdrant
@@ -113,7 +113,7 @@ class RAGService:
             return False
     
     def get_collection_info(self) -> Dict:
-        """Очистить коллекцию? ? ?????????"""
+        """Получить информацию о коллекции"""
         try:
             info = self.qdrant_client.get_collection(self.collection_name)
             return {

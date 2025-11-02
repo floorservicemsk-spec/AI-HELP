@@ -16,7 +16,7 @@ class IngestionService:
         self.chunk_overlap = chunk_overlap
     
     def chunk_text(self, text: str, source: str = "", metadata: Dict = None) -> List[Dict]:
-        """??????? ????? ?? ?????"""
+        """Разбить текст на чанки"""
         chunks = []
         words = text.split()
         
@@ -33,7 +33,7 @@ class IngestionService:
         return chunks
     
     async def ingest_xml(self, url: str) -> List[Dict]:
-        """????????? ? ?????????? XML ????"""
+        """Загрузить и распарсить XML файл"""
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(url)
@@ -43,7 +43,7 @@ class IngestionService:
             root = ET.fromstring(xml_content)
             chunks = []
             
-            # ?????? XML ? ????????? ?????????? ? ???????
+            # Парсим XML и извлекаем информацию о товарах
             for product in root.findall(".//product") or root.findall(".//item"):
                 product_data = {}
                 product_text = []
@@ -69,7 +69,7 @@ class IngestionService:
             raise
     
     def ingest_file(self, file_path: str, file_type: str) -> List[Dict]:
-        """????????? ? ?????????? ????"""
+        """Загрузить и распарсить файл"""
         chunks = []
         source = Path(file_path).name
         
@@ -83,7 +83,7 @@ class IngestionService:
             elif file_type == "text/markdown":
                 chunks = self._parse_markdown(file_path, source)
             else:
-                # ??????? ??? ????????? ????
+                # Попытка как текстовый файл
                 chunks = self._parse_txt(file_path, source)
             
             logger.info(f"Parsed {len(chunks)} chunks from file {source}")
@@ -93,7 +93,7 @@ class IngestionService:
             raise
     
     def _parse_pdf(self, file_path: str, source: str) -> List[Dict]:
-        """??????? PDF"""
+        """Парсинг PDF"""
         chunks = []
         with open(file_path, "rb") as f:
             pdf_reader = PyPDF2.PdfReader(f)
@@ -105,26 +105,26 @@ class IngestionService:
         return chunks
     
     def _parse_docx(self, file_path: str, source: str) -> List[Dict]:
-        """??????? DOCX"""
+        """Парсинг DOCX"""
         doc = docx.Document(file_path)
         text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
         chunks = self.chunk_text(text, source=source, metadata={"type": "docx"})
         return chunks
     
     def _parse_txt(self, file_path: str, source: str) -> List[Dict]:
-        """??????? TXT"""
+        """Парсинг TXT"""
         with open(file_path, "r", encoding="utf-8") as f:
             text = f.read()
         chunks = self.chunk_text(text, source=source, metadata={"type": "txt"})
         return chunks
     
     def _parse_markdown(self, file_path: str, source: str) -> List[Dict]:
-        """??????? Markdown"""
+        """Парсинг Markdown"""
         with open(file_path, "r", encoding="utf-8") as f:
             md_content = f.read()
-        # ???????????? markdown ? ?????
+        # Конвертируем markdown в текст
         html = markdown.markdown(md_content)
-        # ??????? ???????? HTML ?????
+        # Простое удаление HTML тегов
         import re
         text = re.sub(r'<[^>]+>', '', html)
         chunks = self.chunk_text(text, source=source, metadata={"type": "markdown"})
