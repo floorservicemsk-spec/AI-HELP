@@ -62,7 +62,14 @@ if not exist "backend\.env" (
         echo USE_SQLITE=true > backend\.env
         echo QDRANT_HOST=localhost >> backend\.env
         echo QDRANT_PORT=6333 >> backend\.env
+        echo QDRANT_GRPC_PORT=6334 >> backend\.env
         echo SECRET_KEY=your-secret-key-change-in-production >> backend\.env
+        echo MODEL_NAME=openai-community/gpt2 >> backend\.env
+        echo EMBEDDING_MODEL=intfloat/multilingual-e5-large >> backend\.env
+        echo XML_CATALOG_URL=https://av.my-step.eu/avaliable_products.xml >> backend\.env
+        echo UPLOAD_DIR=uploads >> backend\.env
+        echo CHUNK_SIZE=500 >> backend\.env
+        echo CHUNK_OVERLAP=50 >> backend\.env
         echo [?] ?????? ??????? backend\.env
     )
 ) else (
