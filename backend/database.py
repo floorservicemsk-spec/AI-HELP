@@ -3,8 +3,17 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from config import settings
+import os
 
-engine = create_engine(settings.database_url)
+# ????????? SQLite ??? ?????????? ?????????
+if os.getenv("USE_SQLITE", "false").lower() == "true":
+    database_url = "sqlite:///./rag_db.sqlite"
+    connect_args = {"check_same_thread": False}
+else:
+    database_url = settings.database_url
+    connect_args = {}
+
+engine = create_engine(database_url, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
