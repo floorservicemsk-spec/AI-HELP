@@ -20,7 +20,7 @@ class RAGService:
         self._ensure_collection()
     
     def _ensure_collection(self):
-        """??????? ????????? ? Qdrant, ???? ?? ???"""
+        """Создать коллекцию в Qdrant, если её нет"""
         try:
             collections = self.qdrant_client.get_collections().collections
             collection_names = [c.name for c in collections]
@@ -39,19 +39,19 @@ class RAGService:
             raise
     
     def add_chunks(self, chunks: List[Dict[str, any]], batch_id: Optional[str] = None):
-        """???????? ????? ? ????????? ?????????"""
+        """Добавить чанки в векторное хранилище"""
         if not chunks:
             return
         
         points = []
         for idx, chunk in enumerate(chunks):
-            # ?????????? ????????? ??? ??????
+            # ?Генерируем эмбеддинг для текста
             text = chunk.get("text", "")
             if not text:
                 continue
             embedding = self.embedding_model.encode(text).tolist()
             
-            # ?????????? ??? ??? point_id ??? ???????????? (Qdrant ??????? ???????? ID)
+            # ?Используем хеш для point_id для уникальности (Qdrant требует числовой ID)
             point_id_str = f"{batch_id}_{idx}_{text[:50]}" if batch_id else f"{idx}_{text[:50]}"
             point_id = int(hashlib.md5(point_id_str.encode()).hexdigest()[:8], 16)
             
@@ -66,7 +66,7 @@ class RAGService:
             )
             points.append(point)
         
-        # ????????? ????? ???????
+        # Вставляем точки батчами
         batch_size = 100
         for i in range(0, len(points), batch_size):
             batch = points[i:i + batch_size]
@@ -78,18 +78,18 @@ class RAGService:
         logger.info(f"Added {len(chunks)} chunks to Qdrant")
     
     def search(self, query: str, top_k: int = 5) -> List[Dict]:
-        """????? ??????????? ?????? ?? ???????"""
-        # ?????????? ????????? ??? ???????
+        """Поиск релевантных чанков по запросу"""
+        # ?Генерируем эмбеддинг для текста?
         query_embedding = self.embedding_model.encode(query).tolist()
         
-        # ????? ? Qdrant
+        # Поиск в Qdrant
         results = self.qdrant_client.search(
             collection_name=self.collection_name,
             query_vector=query_embedding,
             limit=top_k
         )
         
-        # ??????????? ??????????
+        # Форматируем результаты
         relevant_chunks = []
         for result in results:
             relevant_chunks.append({
@@ -102,7 +102,7 @@ class RAGService:
         return relevant_chunks
     
     def clear_collection(self):
-        """???????? ?????????"""
+        """Очистить коллекцию"""
         try:
             self.qdrant_client.delete_collection(self.collection_name)
             self._ensure_collection()
@@ -113,7 +113,7 @@ class RAGService:
             return False
     
     def get_collection_info(self) -> Dict:
-        """???????? ?????????? ? ?????????"""
+        """Очистить коллекцию? ? ?????????"""
         try:
             info = self.qdrant_client.get_collection(self.collection_name)
             return {
